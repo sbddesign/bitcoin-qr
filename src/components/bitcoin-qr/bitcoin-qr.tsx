@@ -19,6 +19,9 @@ export class BitcoinQR {
   @Prop({ mutable: true }) pollInterval?: number;
   @Prop() imageEmbedded?: boolean; // Whether to embed or overlay the image, may require Error Correction Level experimentation
   @Prop() debug?: boolean;
+  
+  // Click behavior configuration
+  @Prop() clickBehavior?: 'url' | 'copy' | 'none' = 'url';
 
   // QR code styling options
   @Prop() width?: number;
@@ -55,6 +58,73 @@ export class BitcoinQR {
   // @Prop() backgroundGradient?: Gradient;
 
   @State() qr: QRCodeStyling;
+
+  get copyContent() {
+    // For BIP-21 unified QR: include the full URL protocol
+    if (this.unified) {
+      return this.uri;
+    }
+    
+    // For lightning invoice only: just the invoice string
+    if (this.lightning && !this.bitcoin) {
+      return this.lightning;
+    }
+    
+    // For bitcoin on-chain only: just the address string
+    if (this.bitcoin && !this.lightning) {
+      return this.bitcoin;
+    }
+    
+    // For mixed bitcoin + lightning (BIP-21): include the full URL protocol
+    return this.uri;
+  }
+
+  async copyToClipboard() {
+    try {
+      await navigator.clipboard.writeText(this.copyContent);
+      if (this.debug) {
+        console.debug('[bitcoin-qr]: Copied to clipboard:', this.copyContent);
+      }
+    } catch (err) {
+      if (this.debug) {
+        console.error('[bitcoin-qr]: Failed to copy to clipboard:', err);
+      }
+      // Fallback for older browsers
+      this.fallbackCopyTextToClipboard(this.copyContent);
+    }
+  }
+
+  fallbackCopyTextToClipboard(text: string) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.top = '0';
+    textArea.style.left = '0';
+    textArea.style.position = 'fixed';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      if (this.debug) {
+        console.debug('[bitcoin-qr]: Fallback copy successful:', text);
+      }
+    } catch (err) {
+      if (this.debug) {
+        console.error('[bitcoin-qr]: Fallback copy failed:', err);
+      }
+    }
+    document.body.removeChild(textArea);
+  }
+
+  handleClick = (event: Event) => {
+    if (this.clickBehavior === 'copy') {
+      event.preventDefault();
+      this.copyToClipboard();
+    } else if (this.clickBehavior === 'none') {
+      event.preventDefault();
+    }
+    // For 'url' behavior, let the default link behavior work
+  };
 
   // TODO: clear timers when polling is cancelled
   @Watch('isPolling')
@@ -270,6 +340,16 @@ export class BitcoinQR {
   // TODO:
   // i.e. optional copy on click instead of link/uri action
   render() {
-    return <a id="bitcoin-qr-container" href={this.uri}></a>;
+    if (this.clickBehavior === 'url') {
+      return <a id="bitcoin-qr-container" href={this.uri}></a>;
+    } else {
+      return (
+        <div 
+          id="bitcoin-qr-container" 
+          onClick={this.handleClick}
+          style={{ cursor: this.clickBehavior === 'copy' ? 'pointer' : 'default' }}
+        ></div>
+      );
+    }
   }
 }

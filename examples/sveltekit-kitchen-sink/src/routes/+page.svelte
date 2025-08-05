@@ -41,6 +41,7 @@ async function callbackExample() {
 	let pollInterval = 1000;
 	let pollCount = 0;
 	let paid = false;
+	let clickBehavior = 'url';
 
 	$: component =
 		unified ||
@@ -53,7 +54,8 @@ async function callbackExample() {
 		cornersSquareType ||
 		dotsType ||
 		dotsColor ||
-		debug
+		debug ||
+		clickBehavior
 			? `
 <bitcoin-qr
 	id="qr"
@@ -73,6 +75,7 @@ async function callbackExample() {
 	dots-type="${dotsType}"
 	dots-color="${dotsColor}"
 	debug="${debug}"
+	click-behavior="${clickBehavior}"
 	poll-callback={callbackExample}
 />`
 			: '';
@@ -123,6 +126,7 @@ async function callbackExample() {
 				{dotsType}
 				{debug}
 				{isPolling}
+				{clickBehavior}
 				pollCallback={callbackExample}
 			/>
 			{#if isPolling}
@@ -203,6 +207,12 @@ async function callbackExample() {
 				<option value="classy">Classy</option>
 				<option value="classy-rounded">Classy Rounded</option>
 				<option value="extra-rounded">Extra Rounded</option>
+			</select>
+			<span>Click Behavior</span>
+			<select name="Click Behavior" bind:value={clickBehavior}>
+				<option value="url">URL (Default)</option>
+				<option value="copy">Copy to Clipboard</option>
+				<option value="none">None</option>
 			</select>
 			<div class="flex flex-col gap-4">
 				<div class="flex flex-col items-start gap-2">

@@ -21,6 +21,7 @@
 	export let dotsColor = '#000';
 	export let debug = false;
 	export let imageEmbedded = false;
+	export let clickBehavior = 'url';
 	export let pollCallback = () => {}; // FIXME: allow undefined without breaking TS
 	export { className as class };
 	export { idName as id };
@@ -64,4 +65,5 @@
 	dots-color={dotsColor}
 	{debug}
 	image-embedded={imageEmbedded}
+	click-behavior={clickBehavior}
 />

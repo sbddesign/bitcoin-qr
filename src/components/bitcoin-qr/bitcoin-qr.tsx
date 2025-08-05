@@ -21,7 +21,7 @@ export class BitcoinQR {
   @Prop() debug?: boolean;
   
   // Click behavior configuration
-  @Prop() clickBehavior?: 'url' | 'copy' | 'none' = 'url';
+  @Prop({ attribute: 'click-behavior' }) clickBehavior?: 'url' | 'copy' | 'none';
 
   // QR code styling options
   @Prop() width?: number;
@@ -117,10 +117,11 @@ export class BitcoinQR {
   }
 
   handleClick = (event: Event) => {
-    if (this.clickBehavior === 'copy') {
+    const behavior = this.clickBehavior || 'url';
+    if (behavior === 'copy') {
       event.preventDefault();
       this.copyToClipboard();
-    } else if (this.clickBehavior === 'none') {
+    } else if (behavior === 'none') {
       event.preventDefault();
     }
     // For 'url' behavior, let the default link behavior work
@@ -149,6 +150,15 @@ export class BitcoinQR {
         throw new Error(String(e));
       }
     }, this.pollInterval);
+  }
+
+  @Watch('clickBehavior')
+  handleClickBehaviorChange(newValue: string, oldValue: string) {
+    if (this.debug) {
+      console.debug('[bitcoin-qr]: clickBehavior changed from', oldValue, 'to', newValue);
+    }
+    // Force a re-render by calling forceUpdate if available
+    // Since this changes the element type, we need a full re-render
   }
 
   get uri() {
@@ -285,6 +295,8 @@ export class BitcoinQR {
   componentWillLoad() {
     if (this.debug) {
       console.debug('[bitcoin-qr]: debug mode enabled');
+      console.debug('[bitcoin-qr]: Initial clickBehavior value:', this.clickBehavior);
+      console.debug('[bitcoin-qr]: click-behavior attribute:', this.bitcoinQR.getAttribute('click-behavior'));
     }
     if (!this.pollInterval) {
       console.warn('[bitcoin-qr]: Attribute "poll-interval" not provided, defaulting to poll every 5 seconds');
@@ -318,16 +330,32 @@ export class BitcoinQR {
     this.getImageOverlay();
     this.poll();
     if (this.debug) {
-      console.debug('[bitcoin-qr]: Component aljsdfsk with props', this.getDefinedProps());
+      console.debug('[bitcoin-qr]: Component loaded with props', this.getDefinedProps());
+      console.debug('[bitcoin-qr]: clickBehavior value:', this.clickBehavior);
+      console.debug('[bitcoin-qr]: Container element:', shadowContainer);
+      console.debug('[bitcoin-qr]: Container tag name:', shadowContainer.tagName);
     }
   }
 
   componentShouldUpdate(_new: unknown, _old: unknown, propName: string) {
     // Define which props should not trigger an rerender
     const nonRerenderProps = ['isPolling', 'pollInterval', 'callback', 'debug'];
+    
+    if (this.debug) {
+      console.debug('[bitcoin-qr]: componentShouldUpdate called for prop:', propName);
+    }
+    
     if (nonRerenderProps.includes(propName)) {
       return false;
     } else {
+      // For clickBehavior changes, we need a full re-render since it changes the element type
+      if (propName === 'clickBehavior') {
+        if (this.debug) {
+          console.debug('[bitcoin-qr]: clickBehavior changed, forcing full re-render');
+        }
+        return true;
+      }
+      
       this.qr.update({ ...this.getDefinedProps(), image: this.imageEmbedded ? this.image : undefined });
       this.getImageOverlay();
       if (this.debug) {
@@ -340,16 +368,33 @@ export class BitcoinQR {
   // TODO:
   // i.e. optional copy on click instead of link/uri action
   render() {
-    if (this.clickBehavior === 'url') {
-      return <a id="bitcoin-qr-container" href={this.uri}></a>;
+    // Default to 'url' if clickBehavior is not set
+    const behavior = this.clickBehavior || 'url';
+    
+    if (this.debug) {
+      console.debug('[bitcoin-qr]: Rendering with clickBehavior:', behavior);
+      console.debug('[bitcoin-qr]: Original clickBehavior prop:', this.clickBehavior);
+      console.debug('[bitcoin-qr]: Rendering element type:', behavior === 'url' ? 'anchor' : 'div');
+    }
+    
+    if (behavior === 'url') {
+      const element = <a id="bitcoin-qr-container" href={this.uri}></a>;
+      if (this.debug) {
+        console.debug('[bitcoin-qr]: Rendering anchor element with href:', this.uri);
+      }
+      return element;
     } else {
-      return (
+      const element = (
         <div 
           id="bitcoin-qr-container" 
           onClick={this.handleClick}
-          style={{ cursor: this.clickBehavior === 'copy' ? 'pointer' : 'default' }}
+          style={{ cursor: behavior === 'copy' ? 'pointer' : 'default' }}
         ></div>
       );
+      if (this.debug) {
+        console.debug('[bitcoin-qr]: Rendering div element with click handler and cursor:', behavior === 'copy' ? 'pointer' : 'default');
+      }
+      return element;
     }
   }
 }

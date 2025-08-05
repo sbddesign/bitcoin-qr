@@ -22,6 +22,7 @@
 	dots-type="classy-rounded"
 	dots-color="#ff5000"
 	click-behavior="url"
+	debug="true"
 />
 
 <h2>Copy to Clipboard</h2>
@@ -39,6 +40,7 @@
 	dots-type="classy-rounded"
 	dots-color="#ff5000"
 	click-behavior="copy"
+	debug="true"
 />
 
 <h2>No Click Action</h2>
@@ -56,4 +58,5 @@
 	dots-type="classy-rounded"
 	dots-color="#ff5000"
 	click-behavior="none"
+	debug="true"
 />

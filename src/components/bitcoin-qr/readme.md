@@ -11,6 +11,7 @@
 | `backgroundRound`         | `background-round`           |             | `number`                                                                             | `undefined` |
 | `bitcoin`                 | `bitcoin`                    |             | `string`                                                                             | `undefined` |
 | `callback`                | --                           |             | `() => void`                                                                         | `undefined` |
+| `clickBehavior`           | `click-behavior`             |             | `"copy" \| "none" \| "url"`                                                          | `undefined` |
 | `cornersDotColor`         | `corners-dot-color`          |             | `string`                                                                             | `undefined` |
 | `cornersDotType`          | `corners-dot-type`           |             | `"dot" \| "square"`                                                                  | `undefined` |
 | `cornersSquareColor`      | `corners-square-color`       |             | `string`                                                                             | `undefined` |
